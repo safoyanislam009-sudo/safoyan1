@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blox Fruits Value Calc</title>
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --card: #1a1d24;
+            --accent: #00d4ff;
+            --win: #00ff88;
+            --loss: #ff4d4d;
+            --text: #ffffff;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { width: 95%; max-width: 900px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .side { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        h2 { text-align: center; color: var(--accent); margin-top: 0; }
+        select { width: 100%; padding: 10px; background: #2a2e38; color: white; border: none; border-radius: 5px; margin-bottom: 10px; }
+        .list { min-height: 150px; border-top: 1px solid #444; padding-top: 10px; }
+        .fruit-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #222; font-size: 14px; }
+        .remove-btn { color: var(--loss); cursor: pointer; font-weight: bold; }
+        .total { font-size: 20px; font-weight: bold; margin-top: 15px; text-align: center; }
+        .result-bar { grid-column: span 2; background: var(--card); padding: 20px; border-radius: 12px; text-align: center; font-size: 24px; border: 2px solid var(--accent); }
+        .fair { color: var(--accent); }
+        .win { color: var(--win); }
+        .loss { color: var(--loss); }
+    </style>
+</head>
+<body>
+
+    <h1>🍎 Blox Fruits Value Calculator</h1>
+    <p>Market Values Updated: March 2026</p>
+
+    <div class="container">
+        <div class="side">
+            <h2>Your Offer</h2>
+            <select id="selectA" onchange="addFruit('A')">
+                <option value="">+ Add Fruit</option>
+            </select>
+            <div id="listA" class="list"></div>
+            <div class="total">Total: <span id="totalA">0</span></div>
+        </div>
+
+        <div class="side">
+            <h2>Their Offer</h2>
+            <select id="selectB" onchange="addFruit('B')">
+                <option value="">+ Add Fruit</option>
+            </select>
+            <div id="listB" class="list"></div>
+            <div class="total">Total: <span id="totalB">0</span></div>
+        </div>
+
+        <div class="result-bar" id="status">Add fruits to see trade value</div>
+    </div>
+
+    <script>
+        // MARCH 2026 DATABASE
+        const fruitData = {
+            "Kitsune": 115000000, "Dragon": 90000000, "Leopard": 40000000, "Dough": 25000000,
+            "T-Rex": 20000000, "Mammoth": 12500000, "Spirit": 9000000, "Venom": 9000000,
+            "Control": 8000000, "Buddha": 7000000, "Portal": 6000000, "Blizzard": 5000000,
+            "Rumble": 5000000, "Shadow": 3000000, "Sound": 3000000, "Phoenix": 2000000,
+            "Magma": 1500000, "Light": 1000000, "Quake": 1000000, "Dark": 500000
+        };
+
+        let sideA = [];
+        let sideB = [];
+
+        function init() {
+            const sels = [document.getElementById('selectA'), document.getElementById('selectB')];
+            Object.keys(fruitData).sort().forEach(name => {
+                sels.forEach(s => {
+                    let opt = document.createElement('option');
+                    opt.value = name;
+                    opt.innerText = `${name} (${fruitData[name].toLocaleString()})`;
+                    s.appendChild(opt);
+                });
+            });
+        }
+
+        function addFruit(side) {
+            let sel = document.getElementById('select' + side);
+            if (!sel.value) return;
+            if (side === 'A') sideA.push(sel.value);
+            else sideB.push(sel.value);
+            sel.value = "";
+            render();
+        }
+
+        function removeFruit(side, index) {
+            if (side === 'A') sideA.splice(index, 1);
+            else sideB.splice(index, 1);
+            render();
+        }
+
+        function render() {
+            let valA = 0, valB = 0;
+            document.getElementById('listA').innerHTML = sideA.map((f, i) => {
+                valA += fruitData[f];
+                return `<div class="fruit-item"><span>${f}</span><span class="remove-btn" onclick="removeFruit('A', ${i})">X</span></div>`;
+            }).join('');
+            
+            document.getElementById('listB').innerHTML = sideB.map((f, i) => {
+                valB += fruitData[f];
+                return `<div class="fruit-item"><span>${f}</span><span class="remove-btn" onclick="removeFruit('B', ${i})">X</span></div>`;
+            }).join('');
+
+            document.getElementById('totalA').innerText = valA.toLocaleString();
+            document.getElementById('totalB').innerText = valB.toLocaleString();
+
+            updateStatus(valA, valB);
+        }
+
+        function updateStatus(a, b) {
+            const status = document.getElementById('status');
+            if (a === 0 || b === 0) { status.innerText = "Add fruits to both sides"; return; }
+            
+            let diff = a - b;
+            let percent = (Math.abs(diff) / a) * 100;
+
+            if (percent < 10) { status.className = "result-bar fair"; status.innerText = "Fair Trade"; }
+            else if (a < b) { status.className = "result-bar win"; status.innerText = "Big Win! (+" + Math.round(percent) + "%)"; }
+            else { status.className = "result-bar loss"; status.innerText = "L / Loss (" + Math.round(percent) + "%)"; }
+        }
+
+        init();
+    </script>
+</body>
+</html>
